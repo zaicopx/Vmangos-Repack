@@ -103,7 +103,7 @@ jobs:
           cd ${{github.workspace}}
           move ${{github.workspace}}/data/maps ${{github.workspace}}/contrib/repack/MaNGOS/data/maps
           move ${{github.workspace}}/data/vmaps ${{github.workspace}}/contrib/repack/MaNGOS/data/vmaps
-          #move ${{github.workspace}}/data/mmaps ${{github.workspace}}/contrib/repack/MaNGOS/data/mmaps
+          move ${{github.workspace}}/data/mmaps ${{github.workspace}}/contrib/repack/MaNGOS/data/mmaps
 
     - name: make repack zip
       run: |   
