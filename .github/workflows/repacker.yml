@@ -2,7 +2,7 @@ name: Repack Publisher
 
 on:
   workflow_run:
-    workflows: ["vmangos Development DB Dump","Windows Development Release"]
+    workflows: ["vmangos Development DB Dump","Windows Development Release","Client Data Extractor"]
     types:
       - completed
 jobs:
