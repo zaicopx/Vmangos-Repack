@@ -1,5 +1,6 @@
 name: Client Data Extractor
-# change https://github.com/coolzoom/smallvanilla visible when need
+# to checkout private repo have to add secrets in repo settings
+# https://github.com/coolzoom/w1x-vmcore/settings/secrets/actions
 
 on:
   push:
@@ -25,7 +26,8 @@ jobs:
     steps:
     #git checkout
     - uses: actions/checkout@v2
-    
+ 
+        
     - name: build extractors
       #Sets versions for ACE/TBB
       env:
@@ -93,20 +95,20 @@ jobs:
       with:
         path: ${{github.workspace}}/junk
 
-  
     #download small client, notice the extractor doesn't look dbc.mpq so copy it to patch2.mpq
-    - name: checkout
-      run: |
-          dir
-          cd ${{github.workspace}}
-          git clone https://github.com/coolzoom/smallvanilla
-
+    - name: checkout small client
+      uses: actions/checkout@v2
+      with:
+        repository: coolzoom/smallvanilla
+        path: smallvanilla
+        token: ${{ secrets.PAT }} 
+        ref: main
+ 
     - name: Remove .git File
       uses: JesseTG/rm@v1.0.2
       with:
         path: ${{github.workspace}}/smallvanilla/.git      
-
- 
+    
     - name: copy tools
       run: |   
           cd ${{github.workspace}}
