@@ -1,12 +1,20 @@
 name: Repack Publisher 
 
 on:
-  workflow_run:
-    workflows: ["vmangos Development DB Dump","Windows Development Release","Client Data Extractor"]
+  workflow_run: #this approach needs to be done on the default branch
+    workflows: ["vmangos Development DB Dump"]
     types:
       - completed
+  #does not support multiple trigger
+    # workflows: ["Windows Development Release"]
+    # types:
+      # - completed
+  # workflow_run:
+    # workflows: ["Client Data Extractor"]
+    # types:
+      # - completed
 jobs:
-  build:
+  on-success:
     runs-on: windows-latest
     
     steps:
