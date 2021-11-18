@@ -1,18 +1,11 @@
-name: Repack Publisher 
-
+name: Repack Publisher - dataupdate
+# reoacker-*.yml has to be modified at same time
 on:
-  workflow_run: #this approach needs to be done on the default branch
-    workflows: ["vmangos Development DB Dump"]
+  workflow_run: #this approach needs to be done on the default branch, does not support multiple trigger
+    workflows: ["Client Data Extractor"]
     types:
       - completed
-  #does not support multiple trigger
-    # workflows: ["Windows Development Release"]
-    # types:
-      # - completed
-  # workflow_run:
-    # workflows: ["Client Data Extractor"]
-    # types:
-      # - completed
+      
 jobs:
   on-success:
     runs-on: windows-latest
