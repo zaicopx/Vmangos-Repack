@@ -27,7 +27,7 @@ This project is an independent continuation of the Elysium / LightsHope codebase
 - [![bin](https://github.com/coolzoom/vmangos-pack/actions/workflows/dev-release.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/latest)  Latest development binary
 - [![db](https://github.com/coolzoom/vmangos-pack/actions/workflows/db_dump.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/db_latest)  mysql5.6 full dump, no update needed.
 - [![data](https://github.com/coolzoom/vmangos-pack/actions/workflows/datagen.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/data-latest) Latest dbc/maps/vmaps/mmaps from enGB client
-- [![repack](https://github.com/coolzoom/vmangos-pack/actions/workflows/repacker-afternewdata.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/repack-latest)  Latest development repack
+- [![repack](https://github.com/coolzoom/vmangos-pack/actions/workflows/repacker-afterbinrelease.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/repack-latest)  Latest development repack
 ### Useful Links
 - [Wiki](https://github.com/vmangos/wiki)
 - [Discord](https://discord.gg/x9a2jt7)
