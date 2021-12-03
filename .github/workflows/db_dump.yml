@@ -6,7 +6,10 @@ on:
     paths:
       - '**.sql'
       - '.github/workflows/**.yml'
-
+  schedule:
+    - cron: '0 1,13 * * *'
+    # runs at minutes 0 of 1 and 13th hour of everyday
+      
 env:
   REPO_DIR : ${{github.workspace}}
   WORLD_DB : "world_full_14_june_2021"

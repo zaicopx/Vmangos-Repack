@@ -12,7 +12,10 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - 'CONTRIBUTING.md'
-   
+  schedule:
+    - cron: '0 1,13 * * *'
+    # runs at minutes 0 of 1 and 13th hour of everyday
+         
 jobs:
   build:
     runs-on: windows-latest
