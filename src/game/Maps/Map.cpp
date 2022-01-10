@@ -2487,6 +2487,10 @@ bool Map::FindScriptInitialTargets(WorldObject*& source, WorldObject*& target, S
     if (target && !target->IsInWorld())
         target = nullptr;
 
+    if ((step.script->raw.data[4] & SF_GENERAL_SKIP_MISSING_TARGETS) &&
+        (!source && !step.sourceGuid.IsEmpty() || !target && !step.targetGuid.IsEmpty()))
+        return false;
+
     return true;
 }
 
@@ -2504,21 +2508,9 @@ bool Map::FindScriptFinalTargets(WorldObject*& source, WorldObject*& target, Scr
     {
         if (!(target = GetTargetByType(source, target, this, script.target_type, script.target_param1, script.target_param2)))
         {
-            switch (script.target_type)
-            {
-                case TARGET_T_NEAREST_CREATURE_WITH_ENTRY:
-                case TARGET_T_RANDOM_CREATURE_WITH_ENTRY:
-                case TARGET_T_CREATURE_WITH_GUID:
-                case TARGET_T_CREATURE_FROM_INSTANCE_DATA:
-                case TARGET_T_NEAREST_GAMEOBJECT_WITH_ENTRY:
-                case TARGET_T_RANDOM_GAMEOBJECT_WITH_ENTRY:
-                case TARGET_T_GAMEOBJECT_WITH_GUID:
-                case TARGET_T_GAMEOBJECT_FROM_INSTANCE_DATA:
-                {
-                    sLog.outError("FindScriptTargets: Failed to find target for script with id %u (target_param1: %u), (target_param2: %u), (target_type: %u).", script.id, script.target_param1, script.target_param2, script.target_type);
-                    return false;
-                }
-            }
+            if (!(script.raw.data[4] & SF_GENERAL_SKIP_MISSING_TARGETS))
+                sLog.outError("FindScriptTargets: Failed to find target for script with id %u (target_param1: %u), (target_param2: %u), (target_type: %u).", script.id, script.target_param1, script.target_param2, script.target_type);
+            return false;
         }
     }
 
@@ -2574,8 +2566,11 @@ void Map::ScriptsProcess()
 
         if (scriptResultOk)
             scriptResultOk = (this->*(m_ScriptCommands[step.script->command]))(*step.script, source, target);
+        else
+            scriptResultOk = (step.script->raw.data[4] & SF_GENERAL_ABORT_ON_FAILURE) != 0;
 
         lock.lock();
+
         // Command returns true if we should abort script.
         if (scriptResultOk)
             TerminateScript(step);
@@ -3047,15 +3042,13 @@ void Map::PlayDirectSoundToMap(uint32 soundId, uint32 zoneId /*=0*/) const
             itr.getSource()->SendDirectMessage(&data);
 }
 
-
-// NOSTALRIUS: GameObjectCollision
-bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, bool checkDynLos) const
+bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, bool checkDynLos, bool ignoreM2Model) const
 {
     ASSERT(MaNGOS::IsValidMapCoord(x1, y1, z1));
     ASSERT(MaNGOS::IsValidMapCoord(x2, y2, z2));
 
-    return VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(GetId(), x1, y1, z1, x2, y2, z2)
-    && (!checkDynLos || CheckDynamicTreeLoS(x1, y1, z1, x2, y2, z2));
+    return VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(GetId(), x1, y1, z1, x2, y2, z2, ignoreM2Model)
+    && (!checkDynLos || CheckDynamicTreeLoS(x1, y1, z1, x2, y2, z2, ignoreM2Model));
 }
 
 bool Map::GetLosHitPosition(float srcX, float srcY, float srcZ, float& destX, float& destY, float& destZ, float modifyDist) const
@@ -3309,10 +3302,10 @@ float Map::GetDynamicTreeHeight(float x, float y, float z, float maxSearchDist) 
     return _dynamicTree.getHeight(x, y, z, maxSearchDist);
 }
 
-bool Map::CheckDynamicTreeLoS(float x1, float y1, float z1, float x2, float y2, float z2) const
+bool Map::CheckDynamicTreeLoS(float x1, float y1, float z1, float x2, float y2, float z2, bool ignoreM2Model) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(_dynamicTree_lock);
-    return _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2);
+    return _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2, ignoreM2Model);
 }
 
 

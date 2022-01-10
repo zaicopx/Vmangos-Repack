@@ -1254,29 +1254,6 @@ void Unit::PetOwnerKilledUnit(Unit* pVictim)
     CallForAllControlledUnits(PetOwnerKilledUnitHelper(pVictim), CONTROLLED_MINIPET | CONTROLLED_GUARDIANS);
 }
 
-void Unit::CastStop(uint32 except_spellid)
-{
-    for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
-        if (Spell* spell = GetCurrentSpell(CurrentSpellTypes(i)))
-            if (spell->getState() == SPELL_STATE_PREPARING && spell->GetCastedTime())
-                InterruptSpell(CurrentSpellTypes(i), false);
-}
-
-// Obsolete func need remove, here only for comotability vs another patches
-uint32 Unit::SpellNonMeleeDamageLog(Unit* pVictim, uint32 spellId, uint32 damage)
-{
-    SpellEntry const* spellInfo = sSpellMgr.GetSpellEntry(spellId);
-    SpellNonMeleeDamage damageInfo(this, pVictim, spellInfo->Id, SpellSchools(spellInfo->School));
-    bool isCrit = IsSpellCrit(damageInfo.target, spellInfo, GetSchoolMask(damageInfo.school), BASE_ATTACK);
-    CalculateSpellDamage(&damageInfo, damage, spellInfo, EFFECT_INDEX_0, BASE_ATTACK, nullptr, isCrit);
-    damageInfo.target->CalculateAbsorbResistBlock(this, &damageInfo, spellInfo);
-    DealDamageMods(damageInfo.target, damageInfo.damage, &damageInfo.absorb);
-    SendSpellNonMeleeDamageLog(&damageInfo);
-    DealSpellDamage(&damageInfo, true);
-    return damageInfo.damage;
-}
-
-//TODO for melee need create structure as in
 void Unit::CalculateMeleeDamage(Unit* pVictim, uint32 damage, CalcDamageInfo* damageInfo, WeaponAttackType attackType)
 {
     damageInfo->attacker = this;
@@ -2890,9 +2867,9 @@ bool Unit::IsInAccessablePlaceFor(Creature const* c) const
         return c->CanWalk() || c->CanFly();
 }
 
-bool Unit::IsReachableBySwmming() const
+bool Unit::CanSwimAtPosition(float x, float y, float z) const
 {
-    return GetTerrain()->IsSwimmable(GetPositionX(), GetPositionY(), GetPositionZ());
+    return GetTerrain()->IsSwimmable(x, y, z, GetMinSwimDepth());
 }
 
 bool Unit::IsInWater() const
@@ -4406,7 +4383,7 @@ void Unit::SendAttackStateUpdate(CalcDamageInfo* damageInfo) const
     SendMessageToSet(&data, true);
 }
 
-void Unit::SendAttackStateUpdate(uint32 HitInfo, Unit* target, uint8 /*SwingType*/, SpellSchoolMask damageSchoolMask, uint32 Damage, uint32 AbsorbDamage, int32 Resist, VictimState TargetState, uint32 BlockedAmount) const
+void Unit::SendAttackStateUpdate(uint32 HitInfo, Unit* target, SpellSchoolMask damageSchoolMask, uint32 Damage, uint32 AbsorbDamage, int32 Resist, VictimState TargetState, uint32 BlockedAmount) const
 {
     CalcDamageInfo dmgInfo;
     dmgInfo.HitInfo = HitInfo;
@@ -8715,7 +8692,8 @@ void Unit::ModConfuseSpell(bool apply, ObjectGuid casterGuid, uint32 spellId, Mo
 
     if (apply)
     {
-        CastStop(GetObjectGuid() == casterGuid ? spellId : 0);
+        if (casterGuid != GetObjectGuid())
+            InterruptNonMeleeSpells(false);
 
         switch (modType)
         {
@@ -8735,9 +8713,6 @@ void Unit::ModConfuseSpell(bool apply, ObjectGuid casterGuid, uint32 spellId, Mo
                 GetMotionMaster()->MoveConfused();
                 break;
         }
-
-        if (casterGuid != GetObjectGuid())
-            InterruptNonMeleeSpells(false);
 
         if (IsCreature())
             SetTargetGuid(ObjectGuid());
@@ -8936,6 +8911,8 @@ void Unit::UpdateModelData()
                 m_modelCollisionHeight = modelData->collisionHeight / modelData->modelScale;
             else
                 m_modelCollisionHeight = 2.f;
+
+            m_modelCollisionHeight *= (GetObjectScale() / nativeScale);
         }
     }
     else
@@ -9775,7 +9752,7 @@ void Unit::CombatStopInRange(float dist)
 }
 
 // TriniyCore
-void Unit::GetRandomAttackPoint(Unit const* attacker, float &x, float &y, float &z) const
+bool Unit::GetRandomAttackPoint(Unit const* attacker, float &x, float &y, float &z) const
 {
     // Compute random angle
     float angle = GetAngle(attacker);
@@ -9783,12 +9760,17 @@ void Unit::GetRandomAttackPoint(Unit const* attacker, float &x, float &y, float 
     if (sizeFactor < 0.1f)
         sizeFactor = DEFAULT_COMBAT_REACH;
 
+    bool const canOnlySwim = attacker->CanSwim() && !attacker->CanWalk() && !attacker->CanFly();
+    bool const reachableBySwiming = attacker->CanSwimAtPosition(GetPosition());
+
     uint32 attacker_number = GetAttackers().size();
     if (attacker_number > 0)
         --attacker_number;
-    // Don't compute a random position for a moving player
-    if (IsPlayer() && IsMoving())
+
+    // Don't compute a random position for a moving player or when swimming to player near shore
+    if (IsPlayer() && IsMoving() || canOnlySwim && !reachableBySwiming)
         attacker_number = 0;
+
     angle += (attacker_number ? ((float(M_PI / 2) - float(M_PI) * rand_norm_f()) * attacker_number / sizeFactor) * 0.3f : 0);
 
     float dist = attacker->GetObjectBoundingRadius() + GetObjectBoundingRadius() + rand_norm_f() * (attacker->GetMeleeReach() - attacker->GetObjectBoundingRadius());
@@ -9801,25 +9783,26 @@ void Unit::GetRandomAttackPoint(Unit const* attacker, float &x, float &y, float 
             GetPosition(initialPosX, initialPosY, initialPosZ);
 
     float attackerTargetDistance = sqrt(pow(initialPosX - attacker->GetPositionX(), 2) +
-                                        pow(initialPosY - attacker->GetPositionY(), 2) +
-                                        pow(initialPosZ - attacker->GetPositionZ(), 2));
+        pow(initialPosY - attacker->GetPositionY(), 2) +
+        pow(initialPosZ - attacker->GetPositionZ(), 2));
     if (dist > attackerTargetDistance)
     {
-        // On ne bouge pas, on est deja a portee.
+        // We're not moving, we're already within range. 
         attacker->GetPosition(x, y, z);
-        return;
+        return true;
     }
+
     float normalizedVectZ = (attacker->GetPositionZ() - initialPosZ) / attackerTargetDistance;
     float normalizedVectXY = sqrt(1 - normalizedVectZ * normalizedVectZ);
     x = initialPosX + dist * cos(angle) * normalizedVectXY;
     y = initialPosY + dist * sin(angle) * normalizedVectXY;
     z = initialPosZ + dist * normalizedVectZ;
 
-    if ((attacker->CanFly() || (attacker->CanSwim() && IsReachableBySwmming())))
+    if ((attacker->CanFly() || (attacker->CanSwim() && reachableBySwiming)))
     {
         GetMap()->GetLosHitPosition(initialPosX, initialPosY, initialPosZ, x, y, z, -0.2f);
         if (attacker->CanFly())
-            return;
+            return true;
         float ground = 0.0f;
         float waterSurface = GetTerrain()->GetWaterLevel(x, y, z, &ground);
         if (waterSurface == VMAP_INVALID_HEIGHT_VALUE)
@@ -9828,16 +9811,44 @@ void Unit::GetRandomAttackPoint(Unit const* attacker, float &x, float &y, float 
             z = waterSurface;
         if (z < ground)
             z = ground;
+        return true;
+    }
+    else if (canOnlySwim && !reachableBySwiming)
+    {
+        z = GetTerrain()->GetWaterLevel(attacker->GetPositionX(), attacker->GetPositionY(), attacker->GetPositionZ());
+        if (z != VMAP_INVALID_HEIGHT_VALUE)
+        {
+            dist = std::max(GetCombatReach(true) + attacker->GetCombatReach(true), ATTACK_DISTANCE) - GetObjectBoundingRadius() - std::fabs(z - GetPositionZ());
+            for (int i = 0; i < 12; i++)
+            {
+                GetNearPoint2DAroundPosition(GetPositionX(), GetPositionY(), x, y, dist, angle + (M_PI_F / 6.0f) * float(i));
+
+                float ground = 0.0f;
+                z = GetTerrain()->GetWaterLevel(x, y, z, &ground) - attacker->GetMinSwimDepth();
+                if (ground < z &&
+                    attacker->CanReachWithMeleeAutoAttackAtPosition(this, x, y, z) &&
+                    IsWithinLOS(x, y, z, false))
+                    return true;
+            }
+        }
     }
     else
     {
-        uint32 nav = NAV_GROUND | NAV_WATER;
+        uint32 nav = 0;
+        if (attacker->CanWalk())
+            nav |= NAV_GROUND;
+        if (attacker->CanSwim())
+            nav |= NAV_WATER;
         if (!attacker->IsPlayer())
             nav |= NAV_MAGMA | NAV_SLIME;
+
         // Try mmaps. On fail, use target position (but should not fail)
-        if (!GetMap()->GetWalkHitPosition(GetTransport(), initialPosX, initialPosY, initialPosZ, x, y, z, nav))
-            GetPosition(x, y, z);
+        if (GetMap()->GetWalkHitPosition(GetTransport(), initialPosX, initialPosY, initialPosZ, x, y, z, nav))
+            return true;
     }
+
+    GetPosition(x, y, z);
+    return false;
 }
 
 float Unit::GetMeleeReach() const
