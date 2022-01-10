@@ -82,7 +82,7 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
     scripts.clear();                                        // need for reload support
 
     //                                                  0     1        2          3           4            5            6            7                8                9              10            11         12          13          14         15   16   17   18       19
-    QueryResult* result = WorldDatabase.PQuery("SELECT `id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id` FROM %s", tablename);
+    QueryResult* result = WorldDatabase.PQuery("SELECT `id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id` FROM %s ORDER BY `id`, `delay`, `priority`", tablename);
 
     uint32 count = 0;
 
@@ -136,9 +136,21 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         if (!CheckScriptTargets(tmp.target_type, tmp.target_param1, tmp.target_param2, tablename, tmp.id))
             DisableScriptAction(tmp);
 
+        if (tmp.raw.data[4] != (tmp.raw.data[4] & ALL_DB_SCRIPT_FLAGS))
+        {
+            sLog.outErrorDb("Table `%s` has unknown script flags (data_flags = %u) for script id %u", tablename, tmp.raw.data[4], tmp.id);
+            continue;
+        }
+
         if (!tmp.target_type && (tmp.raw.data[4] & SF_GENERAL_SWAP_INITIAL_TARGETS) && (tmp.raw.data[4] & SF_GENERAL_SWAP_FINAL_TARGETS))
         {
-            sLog.outErrorDb("Table `%s` has nonsensical flag combination (data_flags = %u) without a buddy for script id %u", tablename, tmp.moveTo.flags, tmp.id);
+            sLog.outErrorDb("Table `%s` has nonsensical flag combination (data_flags = %u) without a buddy for script id %u", tablename, tmp.raw.data[4], tmp.id);
+            continue;
+        }
+
+        if (tmp.target_type && (tmp.raw.data[4] & SF_GENERAL_TARGET_SELF) && !(tmp.raw.data[4] & (SF_GENERAL_SWAP_INITIAL_TARGETS | SF_GENERAL_SWAP_FINAL_TARGETS)))
+        {
+            sLog.outErrorDb("Table `%s` has nonsensical flag and target combination (data_flags = %u) (target_type = %u) for script id %u", tablename, tmp.raw.data[4], tmp.target_type, tmp.id);
             continue;
         }
 
