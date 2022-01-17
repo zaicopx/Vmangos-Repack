@@ -8876,39 +8876,46 @@ void Unit::SetDisplayId(uint32 displayId)
                     pOwner->SetGroupUpdateFlag(GROUP_UPDATE_FLAG_PET_MODEL_ID);
 }
 
+inline float CheckValidScale(float scale)
+{
+    if (scale <= 0.0f)
+        return DEFAULT_OBJECT_SCALE;
+
+    return scale;
+}
+
+float Unit::GetScaleForDisplayId(uint32 displayId)
+{
+    if (CreatureDisplayInfoEntry const* displayEntry = sCreatureDisplayInfoStore.LookupEntry(displayId))
+    {
+        if (CreatureModelDataEntry const* modelEntry = sCreatureModelDataStore.LookupEntry(displayEntry->ModelId))
+            return CheckValidScale(modelEntry->modelScale * displayEntry->scale);
+
+        return CheckValidScale(displayEntry->scale);
+    }
+
+    return DEFAULT_OBJECT_SCALE;
+}
+
 void Unit::UpdateModelData()
 {
     CreatureDisplayInfoEntry const* displayEntry = sCreatureDisplayInfoStore.LookupEntry(GetDisplayId());
     CreatureDisplayInfoAddon const* displayAddon = sObjectMgr.GetCreatureDisplayInfoAddon(GetDisplayId());
-    if (displayAddon && displayEntry && displayAddon->bounding_radius && displayEntry->scale)
+    if (displayAddon && displayEntry && displayAddon->bounding_radius)
     {
+        CreatureModelDataEntry const* modelEntry = sCreatureModelDataStore.LookupEntry(displayEntry->ModelId);
+
         // Tauren and gnome players have scale != 1.0
-        float nativeScale = displayEntry->scale;
-        if (IsPlayer())
-        {
-            switch (GetDisplayId())
-            {
-                case 59: // Tauren Male
-                    nativeScale = DEFAULT_TAUREN_MALE_SCALE;
-                    break;
-                case 60: // Tauren Female
-                    nativeScale = DEFAULT_TAUREN_FEMALE_SCALE;
-                    break;
-                case 1563: // Gnome Male
-                case 1564: // Gnome Female
-                    nativeScale = DEFAULT_GNOME_SCALE;
-                    break;
-            }
-        }
+        float const nativeScale = CheckValidScale(modelEntry ? (modelEntry->modelScale * displayEntry->scale) : displayEntry->scale);
 
         // we expect values in database to be relative to scale = 1.0
         SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, (GetObjectScale() / nativeScale) * displayAddon->bounding_radius);
         SetFloatValue(UNIT_FIELD_COMBATREACH, (GetObjectScale() / nativeScale) * displayAddon->combat_reach);
 
-        if (CreatureModelDataEntry const* modelData = sCreatureModelDataStore.LookupEntry(displayEntry->ModelId))
+        if (modelEntry)
         {
-            if (modelData->collisionHeight > 0.f && modelData->modelScale > 0.f)
-                m_modelCollisionHeight = modelData->collisionHeight / modelData->modelScale;
+            if (modelEntry->collisionHeight > 0.f && modelEntry->modelScale > 0.f)
+                m_modelCollisionHeight = modelEntry->collisionHeight / modelEntry->modelScale;
             else
                 m_modelCollisionHeight = 2.f;
 
@@ -8921,6 +8928,19 @@ void Unit::UpdateModelData()
         SetFloatValue(UNIT_FIELD_COMBATREACH, 1.5f);
         SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 1.5f);
     }
+}
+
+void Unit::InitPlayerDisplayIds()
+{
+    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+        return;
+
+    uint32 const displayId = GetGender() == GENDER_FEMALE ? info->displayId_f : info->displayId_m;
+
+    SetObjectScale(GetScaleForDisplayId(displayId));
+    SetNativeDisplayId(displayId);
+    SetDisplayId(displayId);
 }
 
 void Unit::ClearComboPointHolders()
@@ -10490,35 +10510,4 @@ void Unit::WritePetSpellsCooldown(WorldPacket& data) const
         ++cdCount;
     }
     data.put<uint16>(cdCountPos, cdCount);
-}
-
-inline float GetDefaultPlayerScale(uint8 race, uint8 gender)
-{
-    if (race == RACE_TAUREN)
-        return (gender == GENDER_FEMALE ? DEFAULT_TAUREN_FEMALE_SCALE : DEFAULT_TAUREN_MALE_SCALE);
-    if (race == RACE_GNOME)
-        return DEFAULT_GNOME_SCALE;
-    return DEFAULT_OBJECT_SCALE;
-}
-
-void Unit::InitPlayerDisplayIds()
-{
-    PlayerInfo const* info = sObjectMgr.GetPlayerInfo(GetRace(), GetClass());
-    if (!info)
-        return;
-
-    uint8 gender = GetGender();
-
-    SetObjectScale(GetDefaultPlayerScale(GetRace(), gender));
-    switch (gender)
-    {
-        case GENDER_FEMALE:
-            SetNativeDisplayId(info->displayId_f);
-            SetDisplayId(info->displayId_f);
-            break;
-        case GENDER_MALE:
-            SetNativeDisplayId(info->displayId_m);
-            SetDisplayId(info->displayId_m);
-            break;
-    }
 }
