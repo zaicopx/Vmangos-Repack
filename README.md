@@ -24,8 +24,7 @@ This project is an independent continuation of the Elysium / LightsHope codebase
 - Tools are great: Content creation should not require programming knowledge. We hope to eventually provide tools that allow for user-friendly editing of database scripts and content, with all data presented in human-readable form.
 
 ### Downloads
- 2022-01-03: notice that mmap generator is currently broken, please use the old mmap for now.
- 
+
 - [![bin](https://github.com/coolzoom/vmangos-pack/actions/workflows/dev-release.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/latest)  Latest development binary
 - [![db](https://github.com/coolzoom/vmangos-pack/actions/workflows/db_dump.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/db_latest)  mysql5.6 full dump, no update needed.
 - [![data](https://github.com/coolzoom/vmangos-pack/actions/workflows/datagen.yml/badge.svg)](https://github.com/coolzoom/vmangos-pack/releases/tag/data-latest) Latest dbc/maps/vmaps/mmaps from enGB client
