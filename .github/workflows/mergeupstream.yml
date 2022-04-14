@@ -78,5 +78,5 @@ jobs:
             automatic_release_tag: "proxy-latest"
             prerelease: true
             title: "ClassicProxy and Launcher (${{ steps.date.outputs.date }})"
-            files: all_snapshots                  
+            files: all_snapshots                
                   
