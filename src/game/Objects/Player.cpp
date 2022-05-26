@@ -5351,19 +5351,13 @@ void Player::HandleBaseModValue(BaseModGroup modGroup, BaseModType modType, floa
         return;
     }
 
-    float val = 1.0f;
-
     switch (modType)
     {
         case FLAT_MOD:
             m_auraBaseMod[modGroup][modType] += apply ? amount : -amount;
             break;
         case PCT_MOD:
-            if (amount <= -100.0f)
-                amount = -200.0f;
-
-            val = (100.0f + amount) / 100.0f;
-            m_auraBaseMod[modGroup][modType] *= apply ? val : (1.0f / val);
+            ApplyPercentModFloatVar(m_auraBaseMod[modGroup][modType], amount, apply);
             break;
     }
 
@@ -7607,7 +7601,7 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
                 else if (charges == 1)
                 {
                     ApplyEnchantment(item, TEMP_ENCHANTMENT_SLOT, false);
-                    item->ClearEnchantment(TEMP_ENCHANTMENT_SLOT);
+                    item->ClearEnchantment(TEMP_ENCHANTMENT_SLOT, true);
                 }
             }
         }
@@ -11858,7 +11852,7 @@ void Player::UpdateEnchantTime(uint32 time)
         else if (itr->leftduration <= time)
         {
             ApplyEnchantment(itr->item, itr->slot, false, false);
-            itr->item->ClearEnchantment(itr->slot);
+            itr->item->ClearEnchantment(itr->slot, true);
             next = m_enchantDuration.erase(itr);
         }
         else if (itr->leftduration > time)
@@ -12110,6 +12104,31 @@ void Player::ApplyEnchantment(Item* item, EnchantmentSlot slot, bool apply, bool
             // duration == 0 will remove EnchantDuration
             AddEnchantmentDuration(item, slot, 0);
         }
+    }
+}
+
+void Player::BuildEnchantmentLog(WorldPacket& data, ObjectGuid casterGuid, uint32 itemId, uint32 spellId, bool showAffiliation) const
+{
+    data << GetObjectGuid();
+    data << ObjectGuid(casterGuid); // message says enchant has faded if empty
+    data << uint32(itemId);
+    data << uint32(spellId);
+    data << uint8(showAffiliation); // only used if casterGuid is not empty
+}
+
+void Player::SendEnchantmentLog(ObjectGuid casterGuid, uint32 itemId, uint32 spellId) const
+{
+    WorldPacket data(SMSG_ENCHANTMENTLOG, (8 + 8 + 4 + 4 + 1));
+    BuildEnchantmentLog(data, casterGuid, itemId, spellId, false);
+    GetSession()->SendPacket(&data); // only to self
+
+    // unapply message should probably be sent only to self
+    // given that affiliation is not used in this case
+    if (!casterGuid.IsEmpty())
+    {
+        WorldPacket data2(SMSG_ENCHANTMENTLOG, (8 + 8 + 4 + 4 + 1));
+        BuildEnchantmentLog(data2, casterGuid, itemId, spellId, true);
+        SendMessageToSet(&data2, false); // exclude self
     }
 }
 
