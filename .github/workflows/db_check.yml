@@ -2,6 +2,7 @@
 name: vmangos Development DB Check
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '**.sql'

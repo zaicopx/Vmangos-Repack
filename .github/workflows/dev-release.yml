@@ -1,6 +1,7 @@
 name: Windows Development Release
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'

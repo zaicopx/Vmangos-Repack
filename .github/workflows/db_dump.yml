@@ -2,6 +2,7 @@
 name: vmangos Development DB Dump
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - '**.sql'
