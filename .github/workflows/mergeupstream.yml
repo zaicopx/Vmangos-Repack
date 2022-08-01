@@ -26,16 +26,6 @@ jobs:
   merge-upstream:
     runs-on: ubuntu-latest
     steps: 
-        - name: Update description
-          uses: ouuan/This-repo-has-x-stars-y-forks-action@v2
-          with:
-            token: ${{ secrets.PAT }}
-            template: 'Progressive Vanilla Core aimed at all versions from 1.2 to 1.12: <auto>.'
-        - name: Checkout
-          uses: actions/checkout@v2
-          with:
-            ref: Repack             # set the branch to merge to
-            fetch-depth: 0 
         - name: Merge Upstream
           run: | 
               git remote add -f upstream "https://github.com/vmangos/core.git"
