@@ -16,9 +16,10 @@ name: Scheduled Merge Remote Action
 # /	Step values	20/15 * * * * runs every 15 minutes starting from minute 20 through 59 (minutes 20, 35, and 50).
 
 on: 
+  workflow_dispatch:
   push:
   schedule:
-    - cron: '0 0,12 * * *'
+    - cron: '0 0,6,12,18 * * *'
     # runs at minutes 0 of 0 and 12th hour of everyday
 
 jobs:
@@ -33,7 +34,7 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v2
           with:
-            ref: repacker             # set the branch to merge to
+            ref: Repack             # set the branch to merge to
             fetch-depth: 0 
         - name: Merge Upstream
           run: | 
@@ -42,46 +43,6 @@ jobs:
               git branch --all
               git config --global user.email "actions@github.com"
               git config --global user.name "Merge Upstream Action"
-              git checkout repacker
+              git checkout Repack
               git merge upstream/development
-              git push origin repacker
-        #download Classic Launcher
-        - uses: robinraju/release-downloader@v1.2
-          with:
-            repository: "coolzoom/WoW-Launcher"
-            tag: "latest"
-            fileName: "*"   
-            
-        #download Proxy
-        - uses: robinraju/release-downloader@v1.2
-          with:
-            repository: "coolzoom/HermesProxy"
-            tag: "latest"
-            fileName: "*" 
-            
-        - name: Archive this artefact
-          uses: actions/upload-artifact@v2
-          with:
-              name: snapshot-proxy
-              path: |
-                  ${{github.workspace}}/*.zip
-                  
-        - name: Download artifact snapshot-datapackage
-          uses: actions/download-artifact@v1
-          with:
-            name: snapshot-proxy
-            path: all_snapshots
-
-        - name: Get current date
-          id: date
-          run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-
-        - name: Upload snapshot
-          uses: "marvinpinto/action-automatic-releases@latest"
-          with:
-            repo_token: "${{ secrets.GITHUB_TOKEN }}"
-            automatic_release_tag: "proxy-latest"
-            prerelease: true
-            title: "ClassicProxy and Launcher (${{ steps.date.outputs.date }})"
-            files: all_snapshots                
-                  
+              git push origin Repack
