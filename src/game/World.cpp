@@ -84,6 +84,8 @@
 
 #include <chrono>
 
+#include "MarketerManager.h"
+
 INSTANTIATE_SINGLETON_1(World);
 
 volatile bool World::m_stopEvent = false;
@@ -1783,6 +1785,12 @@ void World::SetInitialWorldSettings()
 
     uint32 uStartInterval = WorldTimer::getMSTimeDiff(uStartTime, WorldTimer::getMSTime());
     sLog.outString("SERVER STARTUP TIME: %i minutes %i seconds", uStartInterval / 60000, (uStartInterval % 60000) / 1000);
+	
+	// lfm marketer
+    if (sMarketerConfig.StartMarketerSystem())
+    {
+        sMarketerManager->InitializeManager();
+    }
 }
 
 void World::DetectDBCLang()
@@ -1983,6 +1991,9 @@ void World::Update(uint32 diff)
     //cleanup unused GridMap objects as well as VMaps
     if (getConfig(CONFIG_BOOL_CLEANUP_TERRAIN))
         sTerrainMgr.Update(diff);
+	
+	// lfm marketer update 
+    sMarketerManager->UpdateMarketer(diff);
 }
 
 /// Send a packet to all players (except self if mentioned)
