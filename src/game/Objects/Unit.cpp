@@ -4991,6 +4991,11 @@ uint32 Unit::GetGuardianCountWithEntry(uint32 entry)
     return result;
 }
 
+uint32 Unit::GetGuardiansCount() const
+{
+    return uint32(m_guardianPets.size());
+}
+
 Unit* Unit::_GetTotem(TotemSlot slot) const
 {
     return GetTotem(slot);
@@ -5070,6 +5075,14 @@ void Unit::SendEnvironmentalDamageLog(uint8 type, uint32 damage, uint32 absorb, 
     data << uint32(absorb);
     data << int32(resist);
     SendMessageToSet(&data, true);
+}
+
+uint32 Unit::GetSpellRank(SpellEntry const* spellInfo) const
+{
+    uint32 spellRank = GetLevel();
+    if (spellInfo->maxLevel > 0 && spellRank >= spellInfo->maxLevel * 5)
+        spellRank = spellInfo->maxLevel * 5;
+    return spellRank;
 }
 
 /**
