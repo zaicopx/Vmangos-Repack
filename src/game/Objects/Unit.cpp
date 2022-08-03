@@ -472,7 +472,7 @@ void Unit::SendHeartBeat(bool includingSelf)
 
 void Unit::SendMovementPacket(uint16 opcode, bool includingSelf)
 {
-    m_movementInfo.UpdateTime(WorldTimer::getMSTime());
+    m_movementInfo.SetAsServerSide();
     WorldPacket data(opcode);
 #if SUPPORTED_CLIENT_BUILD > CLIENT_BUILD_1_8_4
     data << GetPackGUID();
@@ -4991,6 +4991,11 @@ uint32 Unit::GetGuardianCountWithEntry(uint32 entry)
     return result;
 }
 
+uint32 Unit::GetGuardiansCount() const
+{
+    return uint32(m_guardianPets.size());
+}
+
 Unit* Unit::_GetTotem(TotemSlot slot) const
 {
     return GetTotem(slot);
@@ -5070,6 +5075,14 @@ void Unit::SendEnvironmentalDamageLog(uint8 type, uint32 damage, uint32 absorb, 
     data << uint32(absorb);
     data << int32(resist);
     SendMessageToSet(&data, true);
+}
+
+uint32 Unit::GetSpellRank(SpellEntry const* spellInfo) const
+{
+    uint32 spellRank = GetLevel();
+    if (spellInfo->maxLevel > 0 && spellRank >= spellInfo->maxLevel * 5)
+        spellRank = spellInfo->maxLevel * 5;
+    return spellRank;
 }
 
 /**
@@ -6999,7 +7012,7 @@ void Unit::SetDeathState(DeathState s)
 
         i_motionMaster.Clear(false, true);
         i_motionMaster.MoveIdle();
-        StopMoving(true);
+        StopMoving(IsMoving());
 
         // Powers are cleared on death.
         SetPower(GetPowerType(), 0);
@@ -9353,8 +9366,7 @@ void Unit::NearLandTo(float x, float y, float z, float orientation)
 {
     m_movementInfo.RemoveMovementFlag(MOVEFLAG_JUMPING | MOVEFLAG_FALLINGFAR);
     m_movementInfo.ChangePosition(x, y, z, orientation);
-    m_movementInfo.UpdateTime(WorldTimer::getMSTime());
-    m_movementInfo.ctime = 0; // Not a client packet. Pauses extrapolation.
+    m_movementInfo.SetAsServerSide();
 
     WorldPacket data(MSG_MOVE_FALL_LAND, 41);
 #if SUPPORTED_CLIENT_BUILD > CLIENT_BUILD_1_8_4
@@ -9377,7 +9389,6 @@ void Unit::TeleportPositionRelocation(float x, float y, float z, float orientati
     {
         player->SetPosition(x, y, z, orientation, true);
         player->m_movementInfo.ChangePosition(x, y, z, orientation);
-        player->m_movementInfo.UpdateTime(WorldTimer::getMSTime());
     }
     else if (crea)
     {
