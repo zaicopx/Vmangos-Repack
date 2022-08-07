@@ -1425,8 +1425,13 @@ bool ChatHandler::HandlePartyBotUseGObjectCommand(char* args)
     GameObject* pGo = getSelectedGameObject();
     if (!pGo)
     {
-        SendSysMessage(LANG_COMMAND_NOGAMEOBJECTFOUND);
+        HandleGameObjectSelectCommand(args);
         return false;
+		pGo = getSelectedGameObject();
+        if (!pGo){
+            SendSysMessage(LANG_COMMAND_NOGAMEOBJECTFOUND);
+            return false;
+        }
     }
 
     bool ok = false;
