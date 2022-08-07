@@ -1497,7 +1497,8 @@ class Player final: public Unit
     private:
         PlayerSpellMap m_spells;
         float m_auraBaseMod[BASEMOD_END][MOD_END];
-        SpellModList m_spellMods[MAX_SPELLMOD];
+		uint16 m_baseSpellPower; //SOLOCRAFT MOD
+		SpellModList m_spellMods[MAX_SPELLMOD];
         uint32 m_lastFromClientCastedSpellID;
         std::map<uint32, ItemSetEffect> m_itemSetEffects;
         
@@ -1627,7 +1628,7 @@ class Player final: public Unit
         float GetMeleeCritFromAgility() const;
         float GetDodgeFromAgility() const;
         float GetSpellCritFromIntellect() const;
-        void InitStatBuffMods()
+		void InitStatBuffMods()
         {
             for (int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(PLAYER_FIELD_POSSTAT0 + i, 0);
             for (int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(PLAYER_FIELD_NEGSTAT0 + i, 0);
@@ -1663,7 +1664,9 @@ class Player final: public Unit
         void UpdateManaRegen() override;
         void UpdateAttackPowerAndDamage(bool ranged = false) override;
         void UpdateDamagePhysical(WeaponAttackType attType) override;
-        void UpdateSpellDamageAndHealingBonus();
+		void ApplySpellPowerBonus(int32 amount, bool apply); //SOLOCRAFT MOD
+		uint32 GetBaseSpellPowerBonus() const { return m_baseSpellPower; } //SOLOCRAFT MOD
+		void UpdateSpellDamageAndHealingBonus();
         void UpdateDefenseBonusesMod();
         void UpdateBlockPercentage();
         void UpdateCritPercentage(WeaponAttackType attType);
