@@ -45,8 +45,10 @@ public:
 
     uint32 Enable;
     float BuyRate;
+
+	uint32 EnableSeller;
 };
 
 #define sMarketerConfig (*ACE_Singleton<MarketerConfig, ACE_Recursive_Thread_Mutex>::instance())
 
-#endif
+#endif 
