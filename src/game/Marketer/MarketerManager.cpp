@@ -24,7 +24,8 @@ void MarketerManager::InitializeManager()
 {
 	sLog.outBasic("Initialize marketer manager");
 
-	buyerCheckDelay = TimeConstants::HOUR * TimeConstants::IN_MILLISECONDS;
+	//buyerCheckDelay = TimeConstants::HOUR * TimeConstants::IN_MILLISECONDS;
+	buyerCheckDelay = 1 * TimeConstants::MINUTE * TimeConstants::IN_MILLISECONDS;
 	sellerCheckDelay = 2 * TimeConstants::HOUR * TimeConstants::IN_MILLISECONDS;
 
 	auctionHouseIDSet.clear();
@@ -95,7 +96,7 @@ void MarketerManager::InitializeManager()
 			sellThis = true;
 			break;
 		}
-		case ItemClass::ITEM_CLASS_CONTAINER:
+		case ItemClass::ITEM_CLASS_CONTAINER: //容器
 		{
 			if (proto->Quality >= 2)
 			{
@@ -103,7 +104,7 @@ void MarketerManager::InitializeManager()
 			}
 			break;
 		}
-		case ItemClass::ITEM_CLASS_WEAPON:
+		case ItemClass::ITEM_CLASS_WEAPON: //武器
 		{
 			if (proto->Quality >= 2)
 			{
@@ -111,12 +112,12 @@ void MarketerManager::InitializeManager()
 			}
 			break;
 		}
-		case ItemClass::ITEM_CLASS_GEM:
+		case ItemClass::ITEM_CLASS_GEM: //珠寶?
 		{
 			sellThis = true;
 			break;
 		}
-		case ItemClass::ITEM_CLASS_ARMOR:
+		case ItemClass::ITEM_CLASS_ARMOR: //護甲
 		{
 			if (proto->Quality >= 2)
 			{
@@ -242,8 +243,9 @@ bool MarketerManager::UpdateMarketer(uint32 pmDiff)
 	{
 		return false;
 	}
-	sellerCheckDelay -= pmDiff;
-	if (sellerCheckDelay < 0)
+
+    sellerCheckDelay -= pmDiff;
+    if (sMarketerConfig.EnableSeller && sellerCheckDelay < 0)
 	{
 		UpdateSeller();
 	}
@@ -256,6 +258,7 @@ bool MarketerManager::UpdateMarketer(uint32 pmDiff)
 	return true;
 }
 
+//更新賣家機器人
 bool MarketerManager::UpdateSeller()
 {
 	if (sellingItemIDMap.empty())
@@ -346,9 +349,11 @@ bool MarketerManager::UpdateSeller()
 	return false;
 }
 
+//更新買家機器人
 bool MarketerManager::UpdateBuyer()
 {
-	buyerCheckDelay = HOUR * IN_MILLISECONDS;
+	//buyerCheckDelay = HOUR * IN_MILLISECONDS; //預設1小時檢查一次
+	buyerCheckDelay = 10 * MINUTE * IN_MILLISECONDS;
 
 	sLog.outBasic("Ready to update marketer buyer");
 
