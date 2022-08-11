@@ -270,7 +270,7 @@ struct boss_pyroguard_emberseerAI : public ScriptedAI
         {
             if (AreAllWarlockDead())
             {
-                bBossEnferme = false;
+                isBossLocked = false;
                 EventBossLiberation();
             }
             return;
