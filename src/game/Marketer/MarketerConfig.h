@@ -51,4 +51,4 @@ public:
 
 #define sMarketerConfig (*ACE_Singleton<MarketerConfig, ACE_Recursive_Thread_Mutex>::instance())
 
-#endif 
+#endif

@@ -413,7 +413,7 @@ set (game_SRCS
     vmap/VMapFactory.h
     vmap/VMapManager2.h
     vmap/VMapTools.h
-    vmap/WorldModel.h
+    
 	Marketer/MarketerConfig.h
 	Marketer/MarketerConfig.cpp
 	Marketer/MarketerManager.h
