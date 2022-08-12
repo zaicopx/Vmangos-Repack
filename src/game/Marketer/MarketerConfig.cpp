@@ -104,23 +104,24 @@ bool MarketerConfig::StartMarketerSystem()
 
 	Enable = GetIntDefault("Enable", 0);
 	Enable = GetFloatDefault("BuyRate", 100.0f);
-	//Enable = GetIntDefault("EnableSeller", 1);
+	Enable = GetIntDefault("EnableSeller", 0);
 
 	if (Enable == 0)
 	{
 		sLog.outBasic("Marketer system is disabled.");
 		return false;
 	}
-
-	if (EnableSeller == 0)
-	{
-		sLog.outBasic("Marketer system, Seller is disabled.");
-	}
 	else
 	{
-		sLog.outBasic("Marketer system, Seller is Enabled.");
+		if (EnableSeller == 0)
+		{
+			sLog.outBasic("Marketer system, Seller is disabled.");
+		}
+		else
+		{
+			sLog.outBasic("Marketer system, Seller is Enabled.");
+		}
+		sLog.outBasic("Marketer system started.");
+		return true;
 	}
-
-	sLog.outBasic("Marketer system started.");
-	return true;
 }
