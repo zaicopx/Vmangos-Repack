@@ -1749,10 +1749,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         }
                         return;
                     }
+                    case 7057:  // Haunting Spirits
                     case 16336: // Haunting Phantoms
                     {
                         m_isPeriodic = true;
-                        m_modifier.periodictime = urand(30, 90) * IN_MILLISECONDS;
+                        m_modifier.periodictime = 5 * IN_MILLISECONDS; // expected to tick with 5 sec period
+                        return;
+                    }
+                    case 21827: // Frostwolf Aura DND
+                    case 21863: // Alterac Ram Aura DND
+                    {
+                        m_isPeriodic = true;
+                        m_modifier.periodictime = 2 * IN_MILLISECONDS;
                         return;
                     }
                     case 26234:                             // Ragnaros Submerge Visual
@@ -1946,6 +1954,16 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                                 }
                             }
                         }
+                }
+                return;
+            }
+            case 21827:                                     // Frostwolf Aura DND
+            case 21863:                                     // Alterac Ram Aura DND
+            {
+                if (Creature* pCreature = ToCreature(GetCaster()))
+                {
+                    if (pCreature->IsAlive() && !pCreature->HasCreatureState(CSTATE_DESPAWNING))
+                        pCreature->DespawnOrUnsummon(2000);
                 }
                 return;
             }
@@ -6416,15 +6434,51 @@ void Aura::PeriodicDummyTick()
                     return;
                 }
                 case 7057:                                  // Haunting Spirits
-                    if (roll_chance_i(33))
-                        target->CastSpell(target, m_modifier.m_amount, true, nullptr, this);
+                {
+                    if (roll_chance_i(5))
+                    {
+                        target->CastSpell(target, 7067, true, nullptr, this); // Summon Haunting Spirit
+                    }
                     return;
+                }
                 case 16336:                                 // Haunting Phantoms
                 {
-                    if (urand(0,1))
-                        target->CastSpell(target, 16334, true); // Summon Spiteful Phantom
-                    else
-                        target->CastSpell(target, 16335, true); // Summon Wrath Phantom
+                    if (roll_chance_i(5))
+                    {
+                        if (urand(0, 1))
+                            target->CastSpell(target, 16334, true); // Summon Spiteful Phantom
+                        else
+                            target->CastSpell(target, 16335, true); // Summon Wrath Phantom
+                    }
+                    return;
+                }
+                case 21827:                                 // Frostwolf Aura DND
+                case 21863:                                 // Alterac Ram Aura DND
+                {
+                    if (Player* pPlayer = target->ToPlayer())
+                    {
+                        if (Creature* pRam = ToCreature(GetCaster()))
+                        {
+                            if (pPlayer->IsDead() || pRam->IsDead() ||
+                               !pRam->IsWithinDistInMap(pPlayer, 50.0f))
+                            {
+                                pRam->DespawnOrUnsummon(1000);
+                                GetHolder()->SetAuraDuration(1);
+                                return;
+                            }
+
+                            switch (pRam->GetMotionMaster()->GetCurrentMovementGeneratorType())
+                            {
+                                case IDLE_MOTION_TYPE:
+                                case RANDOM_MOTION_TYPE:
+                                case WAYPOINT_MOTION_TYPE:
+                                    pRam->GetMotionMaster()->MoveFollow(pPlayer, 3.0f, 0);
+                                    break;
+                            }
+                        }
+                        else // ram is gone somehow
+                            GetHolder()->SetAuraDuration(1);  
+                    }
                     return;
                 }
                 case 24596:                                 // Intoxicating Venom

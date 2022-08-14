@@ -3550,7 +3550,7 @@ SpellCastResult Spell::prepare(Aura* triggeredByAura, uint32 chance)
         prepareDataForTriggerSystem();
 
         // calculate cast time (calculated after first CheckCast check to prevent charge counting for first CheckCast fail)
-        m_casttime = m_spellInfo->GetCastTime(this);
+        m_casttime = m_spellInfo->GetCastTime(m_caster, this);
 
         if (Player* pPlayerCaster = m_caster->ToPlayer())
             if (pPlayerCaster->HasCheatOption(PLAYER_CHEAT_NO_CAST_TIME))
@@ -5624,7 +5624,7 @@ SpellCastResult Spell::CheckCast(bool strict)
         }
 
         // Loatheb Corrupted Mind spell failed
-        if (!m_IsCastByItem && !m_IsTriggeredSpell)
+        if (!m_CastItem && !m_IsTriggeredSpell)
         {
             Unit::AuraList const& auraClassScripts = m_casterUnit->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
             for (const auto auraClassScript : auraClassScripts)
@@ -6087,7 +6087,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                             m_spellInfo->EffectImplicitTargetB[j] == TARGET_UNIT_SCRIPT_NEAR_CASTER)
                         {
                             // Fixes Toss Fuel on Bonfire (28806) and Dominion of Soul (16053)
-                            if (m_IsCastByItem)
+                            if (m_CastItem)
                                 m_targets.setUnitTarget(creatureScriptTarget);
 
                             AddUnitTarget(creatureScriptTarget, SpellEffectIndex(j));                            
@@ -7191,7 +7191,7 @@ SpellCastResult Spell::CheckCasterAuras() const
                 SpellAuraHolder* holder = itr.second;
                 SpellEntry const* pEntry = holder->GetSpellProto();
 
-                if ((pEntry->GetSpellSchoolMask() & school_immune) && !(pEntry->AttributesEx & SPELL_ATTR_EX_UNAFFECTED_BY_SCHOOL_IMMUNE))
+                if (pEntry->GetSpellSchoolMask() & school_immune)
                     continue;
                 if ((1 << (pEntry->Dispel)) & dispel_immune)
                     continue;
@@ -7413,7 +7413,7 @@ uint32 Spell::CalculatePowerCost(SpellEntry const* spellInfo, Unit* caster, Spel
     }
 
     // Base powerCost
-    int32 powerCost = spellInfo->manaCost;
+    int32 powerCost = spellInfo->manaCost + spellInfo->manaCostPerlevel * (int32(caster->GetSpellRank(spellInfo)) / 5 - spellInfo->baseLevel);
     // PCT cost from total amount
     if (spellInfo->ManaCostPercentage)
     {
