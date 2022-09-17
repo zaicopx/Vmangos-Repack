@@ -40,7 +40,11 @@ jobs:
       run: |
           fsutil volume diskfree C:
           fsutil volume diskfree D:
+          
           7z x *anticheat.zip
+          7z x data.zip
+          7z x db-*.zip
+          
           del *.zip
           dir
 
