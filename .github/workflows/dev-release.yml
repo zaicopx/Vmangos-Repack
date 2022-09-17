@@ -16,6 +16,7 @@ on:
     - cron: '0 1,13 * * *'
     # runs at minutes 0 of 1 and 13th hour of everyday
          
+      
 jobs:
   build:
     runs-on: windows-2019
@@ -68,7 +69,7 @@ jobs:
       shell: bash
     - name: Create Upload File Name
       run: |
-          echo "ARCHIVE_FILENAME=dev-$(git rev-parse --short HEAD).zip" >> $env:GITHUB_ENV
+          echo "ARCHIVE_FILENAME=${{ github.event.repository.name }}-$(git rev-parse --short HEAD).zip" >> $env:GITHUB_ENV
     - name: Archive files
       run: |
           #data is in Release folder
