@@ -69,7 +69,7 @@ jobs:
       shell: bash
     - name: Create Upload File Name
       run: |
-          echo "ARCHIVE_FILENAME=${{ github.event.repository.name }}-$(git rev-parse --short HEAD).zip" >> $env:GITHUB_ENV
+          echo "ARCHIVE_FILENAME=dev-$(git rev-parse --short HEAD).zip" >> $env:GITHUB_ENV
     - name: Archive files
       run: |
           #data is in Release folder
@@ -111,7 +111,7 @@ jobs:
       shell: bash
     - name: Create Upload File Name
       run: |
-          echo "ARCHIVE_FILENAME=${{ github.event.repository.name }}-$(git rev-parse --short HEAD)-with-anticheat.zip" >> $env:GITHUB_ENV
+          echo "ARCHIVE_FILENAME=dev-$(git rev-parse --short HEAD)-with-anticheat.zip" >> $env:GITHUB_ENV
     - name: Archive files
       run: |
           #data is in Release folder
