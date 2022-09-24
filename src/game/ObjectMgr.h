@@ -201,6 +201,7 @@ class FindCreatureData
 typedef std::unordered_map<uint32, FactionEntry> FactionsMap;
 typedef std::unordered_map<uint32, FactionTemplateEntry> FactionTemplatesMap;
 typedef std::unordered_map<uint32, SoundEntriesEntry> SoundEntryMap;
+typedef std::unordered_map<uint32, ItemPrototype> ItemPrototypeMap;
 
 typedef std::unordered_map<uint32,GameObjectData> GameObjectDataMap;
 typedef GameObjectDataMap::value_type GameObjectDataPair;
@@ -628,7 +629,19 @@ class ObjectMgr
             return sCreatureDataAddonStorage.LookupEntry<CreatureDataAddon>(lowguid);
         }
 
-        static ItemPrototype const* GetItemPrototype(uint32 id) { return sItemStorage.LookupEntry<ItemPrototype>(id); }
+        ItemPrototype const* GetItemPrototype(uint32 id) const
+        {
+            auto iter = m_itemPrototypesMap.find(id);
+            if (iter == m_itemPrototypesMap.end())
+                return nullptr;
+
+            return &iter->second;
+        }
+
+        ItemPrototypeMap const& GetItemPrototypeMap() const
+        {
+            return m_itemPrototypesMap;
+        }
 
         CreatureClassLevelStats const* GetCreatureClassLevelStats(uint32 unitClass, uint32 level) const;
 
@@ -702,7 +715,8 @@ class ObjectMgr
             return m_GameObjectForQuestSet.find(entry) != m_GameObjectForQuestSet.end();
         }
 
-        WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, Team team);
+        WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 mapId, Team team);
+        WorldSafeLocsEntry const* GetClosestGraveYardForArea(uint32 areaOrZoneId, float x, float y, float z, uint32 mapId, Team team);
         bool AddGraveYardLink(uint32 id, uint32 zone, Team team, bool inDB = true);
         void RemoveGraveYardLink(uint32 id, uint32 zone, Team team, bool inDB = false);
         void LoadGraveyardZones();
@@ -1511,6 +1525,7 @@ class ObjectMgr
         FactionTemplatesMap m_FactionTemplatesMap;
 
         SoundEntryMap m_SoundEntriesMap;
+        ItemPrototypeMap m_itemPrototypesMap;
 
         typedef std::vector<std::unique_ptr<SkillLineAbilityEntry>> SkillLineAbiilityStore;
         SkillLineAbiilityStore m_SkillLineAbilities;
