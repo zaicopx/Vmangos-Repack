@@ -9,7 +9,14 @@ on:
   schedule:
     - cron: '0 1,13 * * *'
     # runs at minutes 0 of 1 and 13th hour of everyday
-      
+
+
+# This is what will cancel the previous workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+  
 env:
   REPO_DIR : ${{github.workspace}}
   WORLD_DB : "world_full_14_june_2021"

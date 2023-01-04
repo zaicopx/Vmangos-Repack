@@ -6,6 +6,11 @@ on:
     types:
       - completed
 
+# This is what will cancel the previous workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   on-success:
     runs-on: windows-2019

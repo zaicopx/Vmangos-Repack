@@ -19,6 +19,12 @@ on:
       - 'dep/recastnavigation/Recast/Include/*.*'
       - 'dep/recastnavigation/Recast/Source/*.*'
 
+
+# This is what will cancel the previous workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   build:
     runs-on: windows-2019

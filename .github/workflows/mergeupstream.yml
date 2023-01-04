@@ -21,6 +21,12 @@ on:
     - cron: '0 0,12 * * *'
     # runs at minutes 0 of 0 and 12th hour of everyday
 
+
+# This is what will cancel the previous workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   merge-upstream:
     runs-on: ubuntu-latest
