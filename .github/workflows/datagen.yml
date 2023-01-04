@@ -25,7 +25,7 @@ jobs:
     
     steps:
     #git checkout
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
  
         
     - name: build extractors
@@ -97,7 +97,7 @@ jobs:
 
     #download small client, notice the extractor doesn't look dbc.mpq so copy it to patch2.mpq
     - name: checkout small client
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: coolzoom/smallvanilla
         path: smallvanilla

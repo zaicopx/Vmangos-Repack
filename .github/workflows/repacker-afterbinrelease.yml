@@ -12,24 +12,24 @@ jobs:
     
     steps:
     #git checkout
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     #download latest bin # folder after extract: Release
-    - uses: robinraju/release-downloader@v1.2
+    - uses: robinraju/release-downloader@v1.7
       with:
         repository: "vmangos/core"
         tag: "latest"
         fileName: "*" 
         
     #download latest map, # folder after extract: data
-    - uses: robinraju/release-downloader@v1.2
+    - uses: robinraju/release-downloader@v1.7
       with:
         repository: "coolzoom/w1x-vmcore"
         tag: "data-latest"
         fileName: "*"   
         
     #download latest db # folder after extract: db_dump
-    - uses: robinraju/release-downloader@v1.2
+    - uses: robinraju/release-downloader@v1.7
       with:
         repository: "coolzoom/w1x-vmcore"
         tag: "db_latest"

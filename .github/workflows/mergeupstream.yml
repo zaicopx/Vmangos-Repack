@@ -31,7 +31,7 @@ jobs:
             token: ${{ secrets.PAT }}
             template: 'Progressive Vanilla Core aimed at all versions from 1.2 to 1.12: <auto>.'
         - name: Checkout
-          uses: actions/checkout@v2
+          uses: actions/checkout@v3
           with:
             ref: repacker             # set the branch to merge to
             fetch-depth: 0 
@@ -46,14 +46,14 @@ jobs:
               git merge upstream/development
               git push origin repacker
         #download Classic Launcher
-        - uses: robinraju/release-downloader@v1.2
+        - uses: robinraju/release-downloader@v1.7
           with:
             repository: "coolzoom/WoW-Launcher"
             tag: "latest"
             fileName: "*"   
             
         #download Proxy
-        - uses: robinraju/release-downloader@v1.2
+        - uses: robinraju/release-downloader@v1.7
           with:
             repository: "coolzoom/HermesProxy"
             tag: "latest"
