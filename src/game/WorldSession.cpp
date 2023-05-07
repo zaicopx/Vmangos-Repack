@@ -1118,6 +1118,13 @@ void WorldSession::ProcessAnticheatAction(char const* detector, char const* reas
         detector, playerDesc.c_str(), reason, action);
 }
 
+bool WorldSession::HasUsedClickToMove() const
+{
+    if (m_warden)
+        return m_warden->HasUsedClickToMove();
+    return false;
+}
+
 bool WorldSession::AllowPacket(uint16 opcode)
 {
     // Do not count packets that are often spamed by the client when loading a zone for example.
@@ -1152,6 +1159,7 @@ bool WorldSession::AllowPacket(uint16 opcode)
         case MSG_PETITION_RENAME:
         case CMSG_SEND_MAIL:
         case CMSG_PLAYER_LOGIN:
+        case CMSG_GMTICKET_UPDATETEXT:
             m_floodPacketsCount[FLOOD_VERY_SLOW_OPCODES]++;
         // no break, since slow packets are also very slow packets.
         case CMSG_LOGOUT_REQUEST:

@@ -1097,8 +1097,9 @@ void Unit::Kill(Unit* pVictim, SpellEntry const* spellProto, bool durabilityLoss
 
         // stop combat
         pVictim->CombatStop();
-        pVictim->GetHostileRefManager().deleteReferences();
     }
+
+    pVictim->GetHostileRefManager().deleteReferences();
 
     // outdoor pvp things, do these after setting the death state, else the player activity notify won't work... doh...
     // handle player kill only if not suicide (spirit of redemption for example)
@@ -8057,6 +8058,9 @@ void Unit::RemoveFromWorld()
         Uncharm();
         RemoveNotOwnSingleTargetAuras();
         RemoveGuardians();
+        // Remove non-guardian pet
+        if (Pet* pet = GetPet())
+            pet->Unsummon(PET_SAVE_AS_DELETED, this);
         RemoveAllGameObjects();
         RemoveAllDynObjects();
         CleanupDeletedAuras();

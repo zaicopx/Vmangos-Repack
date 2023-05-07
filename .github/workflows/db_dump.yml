@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - '**.sql'
-      - '.github/workflows/**.yml'
+      - '.github/workflows/db_dump.yml'
   schedule:
     - cron: '0 1,13 * * *'
     # runs at minutes 0 of 1 and 13th hour of everyday
